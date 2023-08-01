@@ -1,5 +1,5 @@
 <?php
 
 it('can test', function () {
-    expect(true)->toBeTrue();
+    $c = new \SergiX44\Gradio\Client('https://sanchit-gandhi-whisper-jax.hf.space/');
 });
