@@ -1,0 +1,48 @@
+{
+    "name": "sergix44/gradio-client-php",
+    "description": "Gradio client for PHP",
+    "keywords": [
+        "SergiX44",
+        "gradio-client-php"
+    ],
+    "homepage": "https://github.com/SergiX44/gradio-client-php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sergio Brighenti",
+            "email": "sergio@brighenti.me",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "pestphp/pest": "^1.20",
+        "laravel/pint": "^1.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "SergiX44\\Gradio\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SergiX44\\Gradio\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
