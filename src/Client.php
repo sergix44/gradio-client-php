@@ -9,10 +9,13 @@ use WebSocket\Client as WebSocket;
 class Client
 {
     private const HTTP_PREDICT = 'run/predict';
+
     private const WS_PREDICT = 'queue/join';
 
     private string $src;
+
     private string $sessionHash;
+
     private array $config = [];
 
     private Guzzle $httpClient;
@@ -22,10 +25,10 @@ class Client
     public function __construct(string $src)
     {
         if (
-            !str_starts_with($src, 'http://') &&
-            !str_starts_with($src, 'https://') &&
-            !str_starts_with($src, 'ws://') &&
-            !str_starts_with($src, 'wss://')
+            ! str_starts_with($src, 'http://') &&
+            ! str_starts_with($src, 'https://') &&
+            ! str_starts_with($src, 'ws://') &&
+            ! str_starts_with($src, 'wss://')
         ) {
             throw new InvalidArgumentException('The src must not contain the protocol');
         }
@@ -44,7 +47,7 @@ class Client
         $this->config = $this->getConfig();
     }
 
-    public function predict(?string $apiName = null, ?int $fnIndex = null, mixed ...$arguments)
+    public function predict(string $apiName = null, int $fnIndex = null, mixed ...$arguments)
     {
 
     }
@@ -57,6 +60,7 @@ class Client
     private function getConfig()
     {
         $response = $this->httpClient->get('config');
+
         return json_decode($response->getBody()->getContents(), flags: JSON_THROW_ON_ERROR);
     }
 }
