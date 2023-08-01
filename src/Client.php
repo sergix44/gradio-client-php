@@ -28,10 +28,10 @@ class Client
     public function __construct(string $src)
     {
         if (
-            !str_starts_with($src, 'http://') &&
-            !str_starts_with($src, 'https://') &&
-            !str_starts_with($src, 'ws://') &&
-            !str_starts_with($src, 'wss://')
+            ! str_starts_with($src, 'http://') &&
+            ! str_starts_with($src, 'https://') &&
+            ! str_starts_with($src, 'ws://') &&
+            ! str_starts_with($src, 'wss://')
         ) {
             throw new InvalidArgumentException('The src must not contain the protocol');
         }
@@ -59,12 +59,10 @@ class Client
 
         $fn = $fnIndex ?? $this->config->fnIndexFromApiName($apiName);
 
-
     }
 
     private function submit(int $dnIndex, mixed ...$arguments)
     {
-
 
     }
 
