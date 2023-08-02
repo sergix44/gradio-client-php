@@ -9,16 +9,19 @@ use SergiX44\Gradio\DTO\Config;
 
 class Client extends RemoteClient
 {
-
     private const HTTP_PREDICT = 'run/predict';
 
     private const WS_PREDICT = 'queue/join';
+
     private const HTTP_CONFIG = 'config';
+
     protected Config $config;
+
     private string $sessionHash;
+
     private array $endpoints = [];
 
-    public function __construct(string $src, ?Config $config = null)
+    public function __construct(string $src, Config $config = null)
     {
         parent::__construct($src);
         $this->config = $config ?? $this->get(self::HTTP_CONFIG, dto: Config::class);
@@ -76,5 +79,4 @@ class Client extends RemoteClient
             $response = $this->post(self::HTTP_PREDICT, $payload);
         }
     }
-
 }

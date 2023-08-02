@@ -6,7 +6,6 @@ use SergiX44\Gradio\Client;
 
 readonly class Endpoint
 {
-
     public function __construct(
         public Client $client,
         public int $index,
@@ -14,5 +13,4 @@ readonly class Endpoint
         public bool $useWebsockets
     ) {
     }
-
 }

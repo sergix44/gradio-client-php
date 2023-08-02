@@ -20,10 +20,10 @@ abstract class RemoteClient
     public function __construct(string $src)
     {
         if (
-            !str_starts_with($src, 'http://') &&
-            !str_starts_with($src, 'https://') &&
-            !str_starts_with($src, 'ws://') &&
-            !str_starts_with($src, 'wss://')
+            ! str_starts_with($src, 'http://') &&
+            ! str_starts_with($src, 'https://') &&
+            ! str_starts_with($src, 'ws://') &&
+            ! str_starts_with($src, 'wss://')
         ) {
             throw new InvalidArgumentException('The src must not contain the protocol');
         }
@@ -40,15 +40,14 @@ abstract class RemoteClient
         ]);
     }
 
-
-    protected function get(string $uri, array $params = [], ?string $dto = null)
+    protected function get(string $uri, array $params = [], string $dto = null)
     {
         $response = $this->httpClient->get($uri, ['query' => $params]);
 
         return $this->parseResponse($response, $dto);
     }
 
-    protected function post(string $uri, array $params = [], ?string $dto = null)
+    protected function post(string $uri, array $params = [], string $dto = null)
     {
         $response = $this->httpClient->post($uri, ['json' => $params]);
 
@@ -70,5 +69,4 @@ abstract class RemoteClient
 
         return json_decode($body, flags: JSON_THROW_ON_ERROR);
     }
-
 }
