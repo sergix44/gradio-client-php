@@ -33,15 +33,4 @@ class Config
     public array $dependencies = [];
 
     public ?string $root = null;
-
-    public function fnIndexFromApiName(string $apiName): ?int
-    {
-        foreach ($this->dependencies as $index => $dep) {
-            if ($dep->api_name === $apiName) {
-                return $index;
-            }
-        }
-
-        return null;
-    }
 }

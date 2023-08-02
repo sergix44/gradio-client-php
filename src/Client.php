@@ -2,79 +2,79 @@
 
 namespace SergiX44\Gradio;
 
-use GuzzleHttp\Client as Guzzle;
 use InvalidArgumentException;
+use SergiX44\Gradio\Client\Endpoint;
+use SergiX44\Gradio\Client\RemoteClient;
 use SergiX44\Gradio\DTO\Config;
-use SergiX44\Hydrator\Hydrator;
-use SergiX44\Hydrator\HydratorInterface;
-use WebSocket\Client as WebSocket;
 
-class Client
+class Client extends RemoteClient
 {
+
     private const HTTP_PREDICT = 'run/predict';
 
     private const WS_PREDICT = 'queue/join';
-
+    private const HTTP_CONFIG = 'config';
+    protected Config $config;
     private string $sessionHash;
+    private array $endpoints = [];
 
-    private Config $config;
-
-    private Guzzle $httpClient;
-
-    private WebSocket $wsClient;
-
-    private HydratorInterface $hydrator;
-
-    public function __construct(string $src)
+    public function __construct(string $src, ?Config $config = null)
     {
-        if (
-            ! str_starts_with($src, 'http://') &&
-            ! str_starts_with($src, 'https://') &&
-            ! str_starts_with($src, 'ws://') &&
-            ! str_starts_with($src, 'wss://')
-        ) {
-            throw new InvalidArgumentException('The src must not contain the protocol');
-        }
-
-        $src = str_ends_with($src, '/') ? $src : "{$src}/";
+        parent::__construct($src);
+        $this->config = $config ?? $this->get(self::HTTP_CONFIG, dto: Config::class);
+        $this->loadEndpoints($this->config->dependencies);
         $this->sessionHash = substr(md5(microtime()), 0, 11);
-        $this->hydrator = new Hydrator();
-
-        $this->httpClient = new Guzzle([
-            'base_uri' => str_replace('ws', 'http', $src),
-            'headers' => [
-                'User-Agent' => 'gradio_client_php/1.0',
-            ],
-        ]);
-        $this->wsClient = new WebSocket(str_replace('http', 'ws', $src));
-
-        $this->config = $this->loadConfig();
     }
 
-    public function predict(string $apiName = null, int $fnIndex = null, mixed ...$arguments)
+    protected function loadEndpoints(array $dependencies): void
     {
-        if ($apiName === null && $fnIndex === null) {
-            throw new InvalidArgumentException('You must provide an apiName or fnIndex');
+        foreach ($dependencies as $index => $dep) {
+            $endpoint = new Endpoint(
+                $this,
+                $index,
+                $dep['api_name'] ?? null,
+                $dep['queue'] !== false,
+            );
+
+            $this->endpoints[$index] = $endpoint;
+            if ($endpoint->apiName !== null) {
+                $this->endpoints[$endpoint->apiName] = $endpoint;
+            }
         }
-
-        $fn = $fnIndex ?? $this->config->fnIndexFromApiName($apiName);
-
-    }
-
-    private function submit(int $dnIndex, mixed ...$arguments)
-    {
-
-    }
-
-    private function loadConfig()
-    {
-        $response = $this->httpClient->get('config');
-
-        return $this->hydrator->hydrateWithJson(Config::class, $response->getBody()->getContents());
     }
 
     public function getConfig(): Config
     {
         return $this->config;
     }
+
+    public function predict(array $arguments, string $apiName = null, int $fnIndex = null): mixed
+    {
+        if ($apiName === null && $fnIndex === null) {
+            throw new InvalidArgumentException('You must provide an apiName or fnIndex');
+        }
+
+        $endpoint = $this->endpoints[$apiName ?? $fnIndex] ?? null;
+
+        if ($endpoint === null) {
+            throw new InvalidArgumentException('Endpoint not found');
+        }
+
+        return $this->submit($endpoint, $arguments);
+    }
+
+    private function submit(Endpoint $endpoint, array $arguments)
+    {
+        $payload = $this->preparePayload($arguments);
+
+        if ($endpoint->useWebsockets) {
+            $ws = $this->ws(self::WS_PREDICT);
+            $ws->send(json_encode($payload));
+            $response = json_decode($ws->receive(), true);
+            $ws->close();
+        } else {
+            $response = $this->post(self::HTTP_PREDICT, $payload);
+        }
+    }
+
 }
