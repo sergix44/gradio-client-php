@@ -4,7 +4,7 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/sergix44/gradio-client-php/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/sergix44/gradio-client-php/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/sergix44/gradio-client-php.svg?style=flat-square)](https://packagist.org/packages/sergix44/gradio-client-php)
 
-A PHP client to call Gradio APIs.
+A PHP client to call [Gradio](https://www.gradio.app) APIs.
 
 ## TODO
 - [x] HTTP and WS support
