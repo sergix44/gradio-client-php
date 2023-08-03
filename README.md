@@ -9,8 +9,10 @@ A PHP client to call Gradio APIs.
 ## TODO
 - [x] HTTP and WS support
 - [x] `predict`
-- [ ] `upload`
-- [ ] Event system
+- [x] getConfig
+- [ ] hf_token support
+- [ ] viewApi
+- [ ] Finish event system
 - [ ] Add tests
 - [ ] Add more examples
 - [ ] Add documentation
