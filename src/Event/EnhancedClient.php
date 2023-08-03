@@ -6,7 +6,6 @@ use WebSocket\Client;
 
 class EnhancedClient extends Client
 {
-
     public function __construct(string $url, array $options = [])
     {
         self::$default_options['timeout'] = 30;

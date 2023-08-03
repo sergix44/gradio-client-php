@@ -4,7 +4,6 @@ namespace SergiX44\Gradio\DTO\Websocket;
 
 class Estimation extends Message
 {
-
     public int $rank;
 
     public int $queue_size;
@@ -14,7 +13,6 @@ class Estimation extends Message
     public float $avg_event_concurrent_process_time;
 
     public float $rank_eta;
+
     public float $queue_eta;
-
-
 }

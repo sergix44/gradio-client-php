@@ -4,7 +4,6 @@ namespace SergiX44\Gradio\Event;
 
 enum Event: string
 {
-
     case SUBMIT = 'EVENT_SUBMITTED';
 
     case QUEUE_FULL = 'EVENT_QUEUE_FULL';

@@ -17,7 +17,6 @@ use SergiX44\Gradio\DTO\Websocket\SendHash;
 use SergiX44\Gradio\Event\Event;
 use SergiX44\Gradio\Exception\GradioException;
 use SergiX44\Gradio\Exception\QueueFullException;
-use SergiX44\Gradio\Websocket\MessageType;
 
 class Client extends RemoteClient
 {
@@ -101,14 +100,12 @@ class Client extends RemoteClient
             if (is_resource($arg)) {
                 return base64_encode(stream_get_contents($arg));
             }
+
             return $arg;
         }, $arguments);
     }
 
     /**
-     * @param  Endpoint  $endpoint
-     * @param  array  $payload
-     * @return Result|null
      * @throws GradioException
      * @throws QueueFullException
      * @throws \JsonException

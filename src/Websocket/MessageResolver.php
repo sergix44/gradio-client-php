@@ -16,6 +16,7 @@ use SergiX44\Hydrator\Annotation\ConcreteResolver;
     public function concreteFor(array $data): ?string
     {
         $msg = $data['msg'] ?? throw new InvalidArgumentException('Missing msg key');
+
         return match ($msg) {
             MessageType::SEND_HASH->value => SendHash::class,
             MessageType::SEND_DATA->value => SendData::class,

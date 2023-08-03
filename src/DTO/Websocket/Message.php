@@ -9,5 +9,4 @@ use SergiX44\Gradio\Websocket\MessageType;
 abstract class Message
 {
     public MessageType $msg;
-
 }
