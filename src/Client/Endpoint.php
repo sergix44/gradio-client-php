@@ -10,7 +10,8 @@ readonly class Endpoint
         public Client $client,
         public int $index,
         public ?string $apiName,
-        public bool $useWebsockets
+        public bool $useWebsockets,
+        public int $argsCount = 1,
     ) {
     }
 }

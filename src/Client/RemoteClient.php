@@ -5,11 +5,11 @@ namespace SergiX44\Gradio\Client;
 use GuzzleHttp\Client as Guzzle;
 use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
+use SergiX44\Gradio\Event\EnhancedClient;
 use SergiX44\Hydrator\Hydrator;
 use SergiX44\Hydrator\HydratorInterface;
-use WebSocket\Client as WebSocket;
 
-abstract class RemoteClient
+abstract class RemoteClient extends RegisterEvents
 {
     private string $src;
 
@@ -54,9 +54,9 @@ abstract class RemoteClient
         return $this->parseResponse($response, $dto);
     }
 
-    protected function ws(string $uri, array $options = []): WebSocket
+    protected function ws(string $uri, array $options = []): EnhancedClient
     {
-        return new WebSocket(str_replace('http', 'ws', $this->src).$uri, $options);
+        return new EnhancedClient(str_replace('http', 'ws', $this->src).$uri, $options);
     }
 
     private function parseResponse(ResponseInterface $response, string $mapTo = null): mixed

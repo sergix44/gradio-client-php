@@ -1,18 +1,19 @@
-# Gradio client for PHP
+# Gradio Client for PHP
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/sergix44/gradio-client-php.svg?style=flat-square)](https://packagist.org/packages/sergix44/gradio-client-php)
 [![Tests](https://img.shields.io/github/actions/workflow/status/sergix44/gradio-client-php/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/sergix44/gradio-client-php/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/sergix44/gradio-client-php.svg?style=flat-square)](https://packagist.org/packages/sergix44/gradio-client-php)
 
-This is where your description should go. Try and limit it to a paragraph or two. Consider adding a small example.
+A PHP client to call Gradio APIs.
 
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/gradio-client-php.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/gradio-client-php)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+## TODO
+- [x] HTTP and WS support
+- [x] `predict`
+- [ ] `upload`
+- [ ] Event system
+- [ ] Add tests
+- [ ] Add more examples
+- [ ] Add documentation
 
 ## Installation
 
@@ -25,8 +26,12 @@ composer require sergix44/gradio-client-php
 ## Usage
 
 ```php
-$skeleton = new GradioClient\Client();
-echo $skeleton->echoPhrase('Hello, GradioClient!');
+use SergiX44\Gradio\Client;
+
+$client = new Client('https://my-special.hf.space');
+
+$result = $client->predict(['arg', 1, 2], apiName: 'myFunction');
+
 ```
 
 ## Testing
@@ -38,10 +43,6 @@ composer test
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](https://github.com/spatie/.github/blob/main/CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 

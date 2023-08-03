@@ -1,8 +1,11 @@
 <?php
 
 it('can test', function () {
-    $c = new \SergiX44\Gradio\Client('https://huggingface-projects-qr-code-ai-art-generator--85d7ps6wv.hf.space');
+    $c = new \SergiX44\Gradio\Client('https://nota-ai-compressed-stable-diffusion.hf.space/');
 
-    expect($c)->toBeInstanceOf(\SergiX44\Gradio\Client::class);
-    expect($c->getConfig())->toBeInstanceOf(\SergiX44\Gradio\DTO\Config::class);
+    $r = $c->predict([
+        "banana and lemon", "", 7.5, 25, 1234,
+    ], fnIndex: 4);
+
+    print_r($r);
 });
