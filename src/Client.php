@@ -34,7 +34,12 @@ class Client extends RemoteClient
 
     private ?string $hfToken;
 
-    public function __construct(string $src, string $hfToken = null, Config $config = null)
+    /**
+     * @param  string  $src
+     * @param  string|null  $hfToken
+     * @param  Config|null  $config
+     */
+    public function __construct(string $src, ?string $hfToken = null, Config $config = null)
     {
         parent::__construct($src);
         $this->config = $config ?? $this->get(self::HTTP_CONFIG, dto: Config::class);
@@ -101,11 +106,22 @@ class Client extends RemoteClient
     {
         return array_map(static function ($arg) {
             if (is_resource($arg)) {
-                $mime = mime_content_type(stream_get_meta_data($arg)['uri']);
-
+                $filename = stream_get_meta_data($arg)['uri'];
+                $contents = stream_get_contents($filename);
+                $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->buffer($contents);
                 return [
-                    'data' => "data:$mime;base64,".base64_encode(stream_get_contents($arg)),
-                    'name' => basename(stream_get_meta_data($arg)['uri']),
+                    'data' => "data:$mime;base64," . base64_encode($contents),
+                    'name' => basename($filename),
+                ];
+            }
+
+            if (is_string($arg) && file_exists($arg)) {
+                $contents = file_get_contents($arg);
+                $mime = mime_content_type($arg);
+                return [
+                    'data' => "data:$mime;base64," . base64_encode($contents),
+                    'name' => basename($arg),
                 ];
             }
 
