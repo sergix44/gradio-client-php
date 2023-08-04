@@ -32,12 +32,20 @@ class Client extends RemoteClient
 
     private array $endpoints = [];
 
-    public function __construct(string $src, Config $config = null)
+    private ?string $hfToken;
+
+    /**
+     * @param  string  $src
+     * @param  string|null  $hfToken
+     * @param  Config|null  $config
+     */
+    public function __construct(string $src, ?string $hfToken = null, Config $config = null)
     {
         parent::__construct($src);
         $this->config = $config ?? $this->get(self::HTTP_CONFIG, dto: Config::class);
         $this->loadEndpoints($this->config->dependencies);
         $this->sessionHash = substr(md5(microtime()), 0, 11);
+        $this->hfToken = $hfToken;
     }
 
     protected function loadEndpoints(array $dependencies): void
@@ -98,7 +106,11 @@ class Client extends RemoteClient
     {
         return array_map(static function ($arg) {
             if (is_resource($arg)) {
-                return base64_encode(stream_get_contents($arg));
+                $mime = mime_content_type(stream_get_meta_data($arg)['uri']);
+                return [
+                    'data' => "data:$mime;base64," . base64_encode(stream_get_contents($arg)),
+                    'name' => basename(stream_get_meta_data($arg)['uri']),
+                ];
             }
 
             return $arg;
@@ -144,9 +156,15 @@ class Client extends RemoteClient
                     'event_data' => null,
                 ]);
             } elseif ($message instanceof ProcessCompleted) {
+                $this->fireEvent(Event::PROCESS_COMPLETED, [$message]);
+                if ($message->success) {
+                    $this->fireEvent(Event::PROCESS_SUCCESS, [$message]);
+                } else {
+                    $this->fireEvent(Event::PROCESS_FAILED, [$message]);
+                }
                 break;
             } elseif ($message instanceof ProcessStarts) {
-                //$this->fireEvent(Event::PROCESS_STARTS, [$message]);
+                $this->fireEvent(Event::PROCESS_STARTS, [$message]);
             } else {
                 throw new GradioException("'Unknown message type $data");
             }

@@ -10,9 +10,10 @@ A PHP client to call [Gradio](https://www.gradio.app) APIs.
 - [x] HTTP and WS support
 - [x] `predict`
 - [x] getConfig
+- [ ] client options
 - [ ] hf_token support
 - [ ] viewApi
-- [ ] Finish event system
+- [x] Finish event system
 - [ ] Add tests
 - [ ] Add more examples
 - [ ] Add documentation

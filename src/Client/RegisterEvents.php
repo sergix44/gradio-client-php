@@ -7,7 +7,7 @@ use SergiX44\Gradio\Event\EventHandler;
 
 abstract class RegisterEvents
 {
-    public array $events = [];
+    private array $events = [];
 
     public function onSubmit(callable $callback): EventHandler
     {
@@ -22,6 +22,26 @@ abstract class RegisterEvents
     public function onQueueFull(callable $callback): EventHandler
     {
         return $this->events[Event::QUEUE_FULL->value] = new EventHandler(Event::QUEUE_FULL, $callback);
+    }
+
+    public function onProcessStarts(callable $callback): EventHandler
+    {
+        return $this->events[Event::PROCESS_STARTS->value] = new EventHandler(Event::PROCESS_STARTS, $callback);
+    }
+
+    public function onProcessCompleted(callable $callback): EventHandler
+    {
+        return $this->events[Event::PROCESS_COMPLETED->value] = new EventHandler(Event::PROCESS_COMPLETED, $callback);
+    }
+
+    public function onProcessSuccess(callable $callback): EventHandler
+    {
+        return $this->events[Event::PROCESS_SUCCESS->value] = new EventHandler(Event::PROCESS_SUCCESS, $callback);
+    }
+
+    public function onProcessFailed(callable $callback): EventHandler
+    {
+        return $this->events[Event::PROCESS_FAILED->value] = new EventHandler(Event::PROCESS_FAILED, $callback);
     }
 
     protected function fireEvent(Event $event, array $data = []): void

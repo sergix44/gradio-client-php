@@ -18,7 +18,8 @@
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.7",
         "nutgram/hydrator": "^5.0",
-        "textalk/websocket": "^1.6"
+        "textalk/websocket": "^1.6",
+        "ext-fileinfo": "*"
     },
     "require-dev": {
         "pestphp/pest": "^1.20",
