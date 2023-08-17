@@ -50,7 +50,7 @@ class Client extends RemoteClient
             $endpoint = new Endpoint(
                 $this,
                 $index,
-                !empty($dep['api_name']) ? $dep['api_name'] : null,
+                ! empty($dep['api_name']) ? $dep['api_name'] : null,
                 $dep['queue'] !== false,
                 count($dep['inputs'])
             );
