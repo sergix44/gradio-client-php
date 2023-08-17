@@ -4,7 +4,7 @@ namespace SergiX44\Gradio\DTO\Websocket;
 
 use SergiX44\Gradio\DTO\Output;
 
-class ProcessCompleted extends Message
+class ProcessGenerating extends Message
 {
     public bool $success = false;
 

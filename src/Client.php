@@ -6,10 +6,11 @@ use InvalidArgumentException;
 use SergiX44\Gradio\Client\Endpoint;
 use SergiX44\Gradio\Client\RemoteClient;
 use SergiX44\Gradio\DTO\Config;
-use SergiX44\Gradio\DTO\Result;
+use SergiX44\Gradio\DTO\Output;
 use SergiX44\Gradio\DTO\Websocket\Estimation;
 use SergiX44\Gradio\DTO\Websocket\Message;
 use SergiX44\Gradio\DTO\Websocket\ProcessCompleted;
+use SergiX44\Gradio\DTO\Websocket\ProcessGenerating;
 use SergiX44\Gradio\DTO\Websocket\ProcessStarts;
 use SergiX44\Gradio\DTO\Websocket\QueueFull;
 use SergiX44\Gradio\DTO\Websocket\SendData;
@@ -49,7 +50,7 @@ class Client extends RemoteClient
             $endpoint = new Endpoint(
                 $this,
                 $index,
-                $dep['api_name'] ?? null,
+                !empty($dep['api_name']) ? $dep['api_name'] : null,
                 $dep['queue'] !== false,
                 count($dep['inputs'])
             );
@@ -66,26 +67,23 @@ class Client extends RemoteClient
         return $this->config;
     }
 
-    public function predict(array $arguments, string $apiName = null, int $fnIndex = null): ?Result
+    public function predict(array $arguments, string $apiName = null, int $fnIndex = null): ?Output
     {
         if ($apiName === null && $fnIndex === null) {
             throw new InvalidArgumentException('You must provide an apiName or fnIndex');
         }
 
+        $apiName = $apiName !== null ? str_replace('/', '', $apiName) : null;
         $endpoint = $this->endpoints[$apiName ?? $fnIndex] ?? null;
 
         if ($endpoint === null) {
             throw new InvalidArgumentException('Endpoint not found');
         }
 
-        if ($endpoint->argsCount !== count($arguments)) {
-            throw new InvalidArgumentException('Invalid number of arguments');
-        }
-
         return $this->submit($endpoint, $arguments);
     }
 
-    private function submit(Endpoint $endpoint, array $arguments): ?Result
+    private function submit(Endpoint $endpoint, array $arguments): ?Output
     {
         $payload = $this->preparePayload($arguments);
         $this->fireEvent(Event::SUBMIT, $payload);
@@ -94,7 +92,7 @@ class Client extends RemoteClient
             return $this->websocketLoop($endpoint, $payload);
         }
 
-        return $this->post(self::HTTP_PREDICT, ['data' => $payload], Result::class);
+        return $this->post(self::HTTP_PREDICT, ['data' => $payload], Output::class);
     }
 
     private function preparePayload(array $arguments): array
@@ -131,7 +129,7 @@ class Client extends RemoteClient
      * @throws QueueFullException
      * @throws \JsonException
      */
-    private function websocketLoop(Endpoint $endpoint, array $payload): ?Result
+    private function websocketLoop(Endpoint $endpoint, array $payload): ?Output
     {
         $ws = $this->ws(self::WS_PREDICT);
 
@@ -174,6 +172,8 @@ class Client extends RemoteClient
                 break;
             } elseif ($message instanceof ProcessStarts) {
                 $this->fireEvent(Event::PROCESS_STARTS, [$message]);
+            } elseif ($message instanceof ProcessGenerating) {
+                $this->fireEvent(Event::PROCESS_GENERATING, [$message]);
             } else {
                 throw new GradioException("'Unknown message type $data");
             }

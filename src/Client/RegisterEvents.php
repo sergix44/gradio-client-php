@@ -24,6 +24,11 @@ abstract class RegisterEvents
         return $this->events[Event::QUEUE_FULL->value] = new EventHandler(Event::QUEUE_FULL, $callback);
     }
 
+    public function onProcessGenerating(callable $callback): EventHandler
+    {
+        return $this->events[Event::PROCESS_GENERATING->value] = new EventHandler(Event::PROCESS_GENERATING, $callback);
+    }
+
     public function onProcessStarts(callable $callback): EventHandler
     {
         return $this->events[Event::PROCESS_STARTS->value] = new EventHandler(Event::PROCESS_STARTS, $callback);
@@ -49,7 +54,7 @@ abstract class RegisterEvents
         if (isset($this->events[$event->value])) {
             $events = is_array($this->events[$event->value]) ? $this->events[$event->value] : [$this->events[$event->value]];
             foreach ($events as $e) {
-                $e($data);
+                $e(...$data);
             }
         }
     }

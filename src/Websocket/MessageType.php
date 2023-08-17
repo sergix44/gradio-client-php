@@ -9,5 +9,6 @@ enum MessageType: string
     case QUEUE_FULL = 'queue_full';
     case QUEUE_ESTIMATION = 'estimation';
     case PROCESS_STARTS = 'process_starts';
+    case PROCESS_GENERATING = 'process_generating';
     case PROCESS_COMPLETED = 'process_completed';
 }

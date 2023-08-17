@@ -5,6 +5,7 @@ namespace SergiX44\Gradio\Websocket;
 use InvalidArgumentException;
 use SergiX44\Gradio\DTO\Websocket\Estimation;
 use SergiX44\Gradio\DTO\Websocket\ProcessCompleted;
+use SergiX44\Gradio\DTO\Websocket\ProcessGenerating;
 use SergiX44\Gradio\DTO\Websocket\ProcessStarts;
 use SergiX44\Gradio\DTO\Websocket\QueueFull;
 use SergiX44\Gradio\DTO\Websocket\SendData;
@@ -23,6 +24,7 @@ use SergiX44\Hydrator\Annotation\ConcreteResolver;
             MessageType::QUEUE_FULL->value => QueueFull::class,
             MessageType::QUEUE_ESTIMATION->value => Estimation::class,
             MessageType::PROCESS_STARTS->value => ProcessStarts::class,
+            MessageType::PROCESS_GENERATING->value => ProcessGenerating::class,
             MessageType::PROCESS_COMPLETED->value => ProcessCompleted::class,
             default => throw new InvalidArgumentException('Unknown msg type'),
         };

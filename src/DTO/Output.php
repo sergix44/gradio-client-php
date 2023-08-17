@@ -2,7 +2,7 @@
 
 namespace SergiX44\Gradio\DTO;
 
-class Result
+class Output
 {
     public bool $is_generating = false;
 
