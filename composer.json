@@ -18,7 +18,7 @@
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.7",
         "nutgram/hydrator": "^5.0",
-        "textalk/websocket": "^1.6",
+        "phrity/websocket": "^1.7",
         "ext-fileinfo": "*"
     },
     "require-dev": {
