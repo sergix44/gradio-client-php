@@ -20,10 +20,10 @@ abstract class RemoteClient extends RegisterEvents
     public function __construct(string $src)
     {
         if (
-            !str_starts_with($src, 'http://') &&
-            !str_starts_with($src, 'https://') &&
-            !str_starts_with($src, 'ws://') &&
-            !str_starts_with($src, 'wss://')
+            ! str_starts_with($src, 'http://') &&
+            ! str_starts_with($src, 'https://') &&
+            ! str_starts_with($src, 'ws://') &&
+            ! str_starts_with($src, 'wss://')
         ) {
             throw new InvalidArgumentException('The src must not contain the protocol');
         }
@@ -44,12 +44,14 @@ abstract class RemoteClient extends RegisterEvents
     protected function http(string $method, string $uri, array $params = [], array $opt = [], ?string $dto = null)
     {
         $response = $this->httpRaw($method, $uri, $params, $opt);
+
         return $this->decodeResponse($response, $dto);
     }
 
     protected function httpRaw(string $method, string $uri, array $params = [], array $opt = [])
     {
         $keyContent = $method === 'get' ? 'query' : 'json';
+
         return $this->httpClient->request($method, $uri, array_merge([
             $keyContent => $params,
         ], $opt));
@@ -60,7 +62,7 @@ abstract class RemoteClient extends RegisterEvents
         return new EnhancedClient(str_replace('http', 'ws', $this->src).$uri, $options);
     }
 
-    protected function decodeResponse(ResponseInterface|string $response, string $mapTo = null): mixed
+    protected function decodeResponse(ResponseInterface|string $response, ?string $mapTo = null): mixed
     {
         $body = $response instanceof ResponseInterface ? $response->getBody()->getContents() : $response;
 

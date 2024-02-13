@@ -37,7 +37,7 @@ class Client extends RemoteClient
 
     private ?string $hfToken;
 
-    public function __construct(string $src, string $hfToken = null, Config $config = null)
+    public function __construct(string $src, ?string $hfToken = null, ?Config $config = null)
     {
         parent::__construct($src);
         $this->config = $config ?? $this->http('get', self::HTTP_CONFIG, dto: Config::class);
@@ -62,7 +62,7 @@ class Client extends RemoteClient
         return $this->config;
     }
 
-    public function predict(array $arguments, string $apiName = null, int $fnIndex = null): ?Output
+    public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null): ?Output
     {
         if ($apiName === null && $fnIndex === null) {
             throw new InvalidArgumentException('You must provide an apiName or fnIndex');
@@ -132,6 +132,7 @@ class Client extends RemoteClient
         $name = $endpoint->apiName();
         if ($name !== null) {
             $name = str_replace('/', '', $name);
+
             return "run/$name";
         }
 
@@ -213,8 +214,8 @@ class Client extends RemoteClient
             throw new GradioException('Error joining the queue');
         }
 
-//        $data = $this->decodeResponse($response);
-//        $eventId = $data['event_id'];
+        //        $data = $this->decodeResponse($response);
+        //        $eventId = $data['event_id'];
 
         $response = $this->httpRaw('get', self::SSE_GET_DATA, ['session_hash' => $this->sessionHash], [
             'headers' => [
@@ -225,10 +226,11 @@ class Client extends RemoteClient
 
         $buffer = '';
         $message = null;
-        while (!$response->getBody()->eof()) {
+        while (! $response->getBody()->eof()) {
             $data = $response->getBody()->read(1);
             if ($data !== "\n") {
                 $buffer .= $data;
+
                 continue;
             }
 

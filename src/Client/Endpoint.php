@@ -6,7 +6,6 @@ use SergiX44\Gradio\DTO\Config;
 
 readonly class Endpoint
 {
-
     public function __construct(
         private Config $config,
         public int $index,
@@ -26,11 +25,11 @@ readonly class Endpoint
 
     public function skipsQueue(): bool
     {
-        return !($this->data['queue'] ?? $this->config->enable_queue);
+        return ! ($this->data['queue'] ?? $this->config->enable_queue);
     }
 
     public function apiName(): ?string
     {
-        return !empty($this->data['api_name']) ? $this->data['api_name'] : null;
+        return ! empty($this->data['api_name']) ? $this->data['api_name'] : null;
     }
 }

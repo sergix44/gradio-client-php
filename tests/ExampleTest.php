@@ -6,8 +6,8 @@ it('can test', function () {
     $client = new Client('https://multimodalart-stable-cascade.hf.space');
 
     $response = $client->predict([
-        "house", // string  in 'Prompt' Textbox component
-        "!", // string  in 'Negative prompt' Textbox component
+        'house', // string  in 'Prompt' Textbox component
+        '!', // string  in 'Negative prompt' Textbox component
         0, // number (numeric value between 0 and 2147483647) in 'Seed' Slider component
         1024, // number (numeric value between 1024 and 1536) in 'Width' Slider component
         1024, // number (numeric value between 1024 and 1536) in 'Height' Slider component
