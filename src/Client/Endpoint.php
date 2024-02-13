@@ -32,4 +32,16 @@ readonly class Endpoint
     {
         return ! empty($this->data['api_name']) ? $this->data['api_name'] : null;
     }
+
+    public function uri()
+    {
+        $name = $this->apiName();
+        if ($name !== null) {
+            $name = str_replace('/', '', $name);
+
+            return "run/$name";
+        }
+
+        return 'run/predict';
+    }
 }

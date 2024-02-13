@@ -62,7 +62,7 @@ class Client extends RemoteClient
         return $this->config;
     }
 
-    public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null): ?Output
+    public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null, bool $raw = false): Output|array|null
     {
         if ($apiName === null && $fnIndex === null) {
             throw new InvalidArgumentException('You must provide an apiName or fnIndex');
@@ -75,21 +75,20 @@ class Client extends RemoteClient
             throw new InvalidArgumentException('Endpoint not found');
         }
 
-        return $this->submit($endpoint, $arguments);
+        return $this->submit($endpoint, $arguments, $raw);
     }
 
-    public function submit(Endpoint $endpoint, array $arguments): ?Output
+    protected function submit(Endpoint $endpoint, array $arguments, bool $raw): Output|array|null
     {
         $payload = $this->preparePayload($arguments);
         $this->fireEvent(Event::SUBMIT, $payload);
 
         if ($endpoint->skipsQueue()) {
-            return $this->http('post', $this->makeUri($endpoint), [
+            return $this->http('post', $endpoint->uri(), [
                 'data' => $payload,
                 'fn_index' => $endpoint->index,
                 'session_hash' => $this->sessionHash,
-                'event_data' => null,
-            ], dto: Output::class);
+            ], dto: $raw ? null : Output::class);
         }
 
         return match ($this->config->protocol) {
@@ -125,18 +124,6 @@ class Client extends RemoteClient
 
             return $arg;
         }, $arguments);
-    }
-
-    protected function makeUri(Endpoint $endpoint): string
-    {
-        $name = $endpoint->apiName();
-        if ($name !== null) {
-            $name = str_replace('/', '', $name);
-
-            return "run/$name";
-        }
-
-        return self::HTTP_PREDICT;
     }
 
     /**

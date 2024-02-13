@@ -39,3 +39,16 @@ it('can test another model', function () {
 
     expect($client)->toBeInstanceOf(Client::class);
 });
+
+it('can test fnindexsudgugdhs', function () {
+    $client = new Client('https://ysharma-explore-llamav2-with-tgi.hf.space/--replicas/brc3o/');
+
+    $client->predict([], fnIndex: 6, raw: true);
+    $client->predict(['hi'], fnIndex: 2, raw: true);
+    $client->predict([null, null], fnIndex: 3, raw: true);
+    $response = $client->predict([null, null, "", 0.9, 256, 0.6, 1.2], fnIndex: 4);
+
+    $value = $response->getOutput();
+
+    expect($value)->toBeArray();
+});
