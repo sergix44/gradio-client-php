@@ -46,7 +46,7 @@ it('can test fnindexsudgugdhs', function () {
     $client->predict([], fnIndex: 6, raw: true);
     $client->predict(['hi'], fnIndex: 2, raw: true);
     $client->predict([null, null], fnIndex: 3, raw: true);
-    $response = $client->predict([null, null, "", 0.9, 256, 0.6, 1.2], fnIndex: 4);
+    $response = $client->predict([null, null, '', 0.9, 256, 0.6, 1.2], fnIndex: 4);
 
     $value = $response->getOutput();
 
