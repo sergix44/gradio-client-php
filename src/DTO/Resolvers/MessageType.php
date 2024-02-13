@@ -1,6 +1,6 @@
 <?php
 
-namespace SergiX44\Gradio\Websocket;
+namespace SergiX44\Gradio\DTO\Resolvers;
 
 enum MessageType: string
 {
@@ -11,4 +11,6 @@ enum MessageType: string
     case PROCESS_STARTS = 'process_starts';
     case PROCESS_GENERATING = 'process_generating';
     case PROCESS_COMPLETED = 'process_completed';
+
+    case LOG = 'log';
 }

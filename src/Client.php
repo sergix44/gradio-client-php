@@ -6,15 +6,15 @@ use InvalidArgumentException;
 use SergiX44\Gradio\Client\Endpoint;
 use SergiX44\Gradio\Client\RemoteClient;
 use SergiX44\Gradio\DTO\Config;
+use SergiX44\Gradio\DTO\Messages\Estimation;
+use SergiX44\Gradio\DTO\Messages\Message;
+use SergiX44\Gradio\DTO\Messages\ProcessCompleted;
+use SergiX44\Gradio\DTO\Messages\ProcessGenerating;
+use SergiX44\Gradio\DTO\Messages\ProcessStarts;
+use SergiX44\Gradio\DTO\Messages\QueueFull;
+use SergiX44\Gradio\DTO\Messages\SendData;
+use SergiX44\Gradio\DTO\Messages\SendHash;
 use SergiX44\Gradio\DTO\Output;
-use SergiX44\Gradio\DTO\Websocket\Estimation;
-use SergiX44\Gradio\DTO\Websocket\Message;
-use SergiX44\Gradio\DTO\Websocket\ProcessCompleted;
-use SergiX44\Gradio\DTO\Websocket\ProcessGenerating;
-use SergiX44\Gradio\DTO\Websocket\ProcessStarts;
-use SergiX44\Gradio\DTO\Websocket\QueueFull;
-use SergiX44\Gradio\DTO\Websocket\SendData;
-use SergiX44\Gradio\DTO\Websocket\SendHash;
 use SergiX44\Gradio\Event\Event;
 use SergiX44\Gradio\Exception\GradioException;
 use SergiX44\Gradio\Exception\QueueFullException;
@@ -23,7 +23,9 @@ class Client extends RemoteClient
 {
     private const HTTP_PREDICT = 'run/predict';
 
-    private const WS_PREDICT = 'queue/join';
+    private const QUEUE_JOIN = 'queue/join';
+
+    private const SSE_GET_DATA = 'queue/data';
 
     private const HTTP_CONFIG = 'config';
 
@@ -38,7 +40,7 @@ class Client extends RemoteClient
     public function __construct(string $src, string $hfToken = null, Config $config = null)
     {
         parent::__construct($src);
-        $this->config = $config ?? $this->get(self::HTTP_CONFIG, dto: Config::class);
+        $this->config = $config ?? $this->http('get', self::HTTP_CONFIG, dto: Config::class);
         $this->loadEndpoints($this->config->dependencies);
         $this->sessionHash = substr(md5(microtime()), 0, 11);
         $this->hfToken = $hfToken;
@@ -46,18 +48,11 @@ class Client extends RemoteClient
 
     protected function loadEndpoints(array $dependencies): void
     {
-        foreach ($dependencies as $index => $dep) {
-            $endpoint = new Endpoint(
-                $this,
-                $index,
-                ! empty($dep['api_name']) ? $dep['api_name'] : null,
-                $dep['queue'] !== false,
-                count($dep['inputs'])
-            );
-
+        foreach ($dependencies as $index => $dp) {
+            $endpoint = new Endpoint($this->config, $index, $dp);
             $this->endpoints[$index] = $endpoint;
-            if ($endpoint->apiName !== null) {
-                $this->endpoints[$endpoint->apiName] = $endpoint;
+            if ($endpoint->apiName() !== null) {
+                $this->endpoints[$endpoint->apiName()] = $endpoint;
             }
         }
     }
@@ -83,16 +78,24 @@ class Client extends RemoteClient
         return $this->submit($endpoint, $arguments);
     }
 
-    private function submit(Endpoint $endpoint, array $arguments): ?Output
+    public function submit(Endpoint $endpoint, array $arguments): ?Output
     {
         $payload = $this->preparePayload($arguments);
         $this->fireEvent(Event::SUBMIT, $payload);
 
-        if ($endpoint->useWebsockets) {
-            return $this->websocketLoop($endpoint, $payload);
+        if ($endpoint->skipsQueue()) {
+            return $this->http('post', $this->makeUri($endpoint), [
+                'data' => $payload,
+                'fn_index' => $endpoint->index,
+                'session_hash' => $this->sessionHash,
+                'event_data' => null,
+            ], dto: Output::class);
         }
 
-        return $this->post(self::HTTP_PREDICT, ['data' => $payload], Output::class);
+        return match ($this->config->protocol) {
+            'sse_v1', 'sse_v2' => $this->sseV1V2Loop($endpoint, $payload),
+            default => $this->websocketLoop($endpoint, $payload),
+        };
     }
 
     private function preparePayload(array $arguments): array
@@ -124,6 +127,17 @@ class Client extends RemoteClient
         }, $arguments);
     }
 
+    protected function makeUri(Endpoint $endpoint): string
+    {
+        $name = $endpoint->apiName();
+        if ($name !== null) {
+            $name = str_replace('/', '', $name);
+            return "run/$name";
+        }
+
+        return self::HTTP_PREDICT;
+    }
+
     /**
      * @throws GradioException
      * @throws QueueFullException
@@ -131,9 +145,8 @@ class Client extends RemoteClient
      */
     private function websocketLoop(Endpoint $endpoint, array $payload): ?Output
     {
-        $ws = $this->ws(self::WS_PREDICT);
+        $ws = $this->ws(self::QUEUE_JOIN);
 
-        $message = null;
         while (true) {
             $data = $ws->receive();
 
@@ -180,6 +193,70 @@ class Client extends RemoteClient
         }
 
         $ws->close();
+
+        return $message?->output;
+    }
+
+    private function sseV1V2Loop(Endpoint $endpoint, array $payload): ?Output
+    {
+        $response = $this->httpRaw('post', self::QUEUE_JOIN, [
+            'data' => $payload,
+            'fn_index' => $endpoint->index,
+            'session_hash' => $this->sessionHash,
+        ]);
+
+        if ($response->getStatusCode() === 503) {
+            throw new QueueFullException();
+        }
+
+        if ($response->getStatusCode() !== 200) {
+            throw new GradioException('Error joining the queue');
+        }
+
+//        $data = $this->decodeResponse($response);
+//        $eventId = $data['event_id'];
+
+        $response = $this->httpRaw('get', self::SSE_GET_DATA, ['session_hash' => $this->sessionHash], [
+            'headers' => [
+                'Accept' => 'text/event-stream',
+            ],
+            'stream' => true,
+        ]);
+
+        $buffer = '';
+        $message = null;
+        while (!$response->getBody()->eof()) {
+            $data = $response->getBody()->read(1);
+            if ($data !== "\n") {
+                $buffer .= $data;
+                continue;
+            }
+
+            // read second \n
+            $response->getBody()->read(1);
+
+            // remove data:
+            $buffer = str_replace('data: ', '', $buffer);
+            $message = $this->hydrator->hydrateWithJson(Message::class, $buffer);
+
+            if ($message instanceof ProcessCompleted) {
+                $this->fireEvent(Event::PROCESS_COMPLETED, [$message]);
+                if ($message->success) {
+                    $this->fireEvent(Event::PROCESS_SUCCESS, [$message]);
+                } else {
+                    $this->fireEvent(Event::PROCESS_FAILED, [$message]);
+                }
+                break;
+            } elseif ($message instanceof ProcessStarts) {
+                $this->fireEvent(Event::PROCESS_STARTS, [$message]);
+            } elseif ($message instanceof ProcessGenerating) {
+                $this->fireEvent(Event::PROCESS_GENERATING, [$message]);
+            } elseif ($message instanceof Estimation) {
+                $this->fireEvent(Event::QUEUE_ESTIMATION, [$message]);
+            }
+
+            $buffer = '';
+        }
 
         return $message?->output;
     }

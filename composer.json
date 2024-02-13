@@ -17,7 +17,7 @@
     "require": {
         "php": "^8.2",
         "guzzlehttp/guzzle": "^7.7",
-        "nutgram/hydrator": ">=5.0",
+        "nutgram/hydrator": ">=6.0",
         "phrity/websocket": "^1.7.2",
         "ext-fileinfo": "*"
     },

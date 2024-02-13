@@ -20,10 +20,10 @@ abstract class RemoteClient extends RegisterEvents
     public function __construct(string $src)
     {
         if (
-            ! str_starts_with($src, 'http://') &&
-            ! str_starts_with($src, 'https://') &&
-            ! str_starts_with($src, 'ws://') &&
-            ! str_starts_with($src, 'wss://')
+            !str_starts_with($src, 'http://') &&
+            !str_starts_with($src, 'https://') &&
+            !str_starts_with($src, 'ws://') &&
+            !str_starts_with($src, 'wss://')
         ) {
             throw new InvalidArgumentException('The src must not contain the protocol');
         }
@@ -36,22 +36,23 @@ abstract class RemoteClient extends RegisterEvents
             'base_uri' => str_replace('ws', 'http', $this->src),
             'headers' => [
                 'User-Agent' => 'gradio_client_php/1.0',
+                'Accept' => 'application/json',
             ],
         ]);
     }
 
-    protected function get(string $uri, array $params = [], string $dto = null)
+    protected function http(string $method, string $uri, array $params = [], array $opt = [], ?string $dto = null)
     {
-        $response = $this->httpClient->get($uri, ['query' => $params]);
-
-        return $this->parseResponse($response, $dto);
+        $response = $this->httpRaw($method, $uri, $params, $opt);
+        return $this->decodeResponse($response, $dto);
     }
 
-    protected function post(string $uri, array $params = [], string $dto = null)
+    protected function httpRaw(string $method, string $uri, array $params = [], array $opt = [])
     {
-        $response = $this->httpClient->post($uri, ['json' => $params]);
-
-        return $this->parseResponse($response, $dto);
+        $keyContent = $method === 'get' ? 'query' : 'json';
+        return $this->httpClient->request($method, $uri, array_merge([
+            $keyContent => $params,
+        ], $opt));
     }
 
     protected function ws(string $uri, array $options = []): EnhancedClient
@@ -59,14 +60,14 @@ abstract class RemoteClient extends RegisterEvents
         return new EnhancedClient(str_replace('http', 'ws', $this->src).$uri, $options);
     }
 
-    private function parseResponse(ResponseInterface $response, string $mapTo = null): mixed
+    protected function decodeResponse(ResponseInterface|string $response, string $mapTo = null): mixed
     {
-        $body = $response->getBody()->getContents();
+        $body = $response instanceof ResponseInterface ? $response->getBody()->getContents() : $response;
 
         if ($mapTo !== null) {
             return $this->hydrator->hydrateWithJson($mapTo, $body);
         }
 
-        return json_decode($body, flags: JSON_THROW_ON_ERROR);
+        return json_decode($body, true, flags: JSON_THROW_ON_ERROR);
     }
 }

@@ -1,15 +1,17 @@
 <?php
 
-namespace SergiX44\Gradio\Websocket;
+namespace SergiX44\Gradio\DTO\Resolvers;
 
 use InvalidArgumentException;
-use SergiX44\Gradio\DTO\Websocket\Estimation;
-use SergiX44\Gradio\DTO\Websocket\ProcessCompleted;
-use SergiX44\Gradio\DTO\Websocket\ProcessGenerating;
-use SergiX44\Gradio\DTO\Websocket\ProcessStarts;
-use SergiX44\Gradio\DTO\Websocket\QueueFull;
-use SergiX44\Gradio\DTO\Websocket\SendData;
-use SergiX44\Gradio\DTO\Websocket\SendHash;
+use SergiX44\Gradio\DTO\Messages\Estimation;
+use SergiX44\Gradio\DTO\Messages\Log;
+use SergiX44\Gradio\DTO\Messages\Message;
+use SergiX44\Gradio\DTO\Messages\ProcessCompleted;
+use SergiX44\Gradio\DTO\Messages\ProcessGenerating;
+use SergiX44\Gradio\DTO\Messages\ProcessStarts;
+use SergiX44\Gradio\DTO\Messages\QueueFull;
+use SergiX44\Gradio\DTO\Messages\SendData;
+use SergiX44\Gradio\DTO\Messages\SendHash;
 use SergiX44\Hydrator\Annotation\ConcreteResolver;
 
 #[\Attribute] class MessageResolver extends ConcreteResolver
@@ -26,7 +28,8 @@ use SergiX44\Hydrator\Annotation\ConcreteResolver;
             MessageType::PROCESS_STARTS->value => ProcessStarts::class,
             MessageType::PROCESS_GENERATING->value => ProcessGenerating::class,
             MessageType::PROCESS_COMPLETED->value => ProcessCompleted::class,
-            default => throw new InvalidArgumentException('Unknown msg type'),
+            MessageType::LOG->value => Log::class,
+            default => (new class extends Message {})::class,
         };
     }
 }

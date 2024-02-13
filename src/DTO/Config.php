@@ -33,4 +33,23 @@ class Config
     public array $dependencies = [];
 
     public ?string $root = null;
+
+    public ?string $protocol = null;
+
+    private array $_extra = [];
+
+    public function __set(string $name, $value): void
+    {
+        $this->_extra[$name] = $value;
+    }
+
+    public function __get(string $name)
+    {
+        return $this->_extra[$name] ?? null;
+    }
+
+    public function __isset(string $name): bool
+    {
+        return isset($this->_extra[$name]);
+    }
 }
