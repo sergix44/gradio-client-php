@@ -24,16 +24,13 @@ it('can test', function () {
 });
 
 it('can test another model', function () {
-    $client = new Client('https://ysharma-explore-llamav2-with-tgi.hf.space/--replicas/brc3o/');
+    $client = new Client('https://ehristoforu-mixtral-46-7b-chat.hf.space');
 
-    $response = $client->predict([
-        'list all names of the week in all languages', // str  in 'parameter_28' Textbox component
-        '', // str  in 'Optional system prompt' Textbox component
-        0.9, // float (numeric value between 0.0 and 1.0) in 'Temperature' Slider component
-        4096, // float (numeric value between 0 and 4096) in 'Max new tokens' Slider component
-        0.6, // float (numeric value between 0.0 and 1) in 'Top-p (nucleus sampling)' Slider component
-        1.2, // float (numeric value between 1.0 and 2.0) in 'Repetition penalty' Slider component
-    ], '/chat');
+    $client->predict([], fnIndex: 5, raw: true);
+    $client->predict(['hi'], fnIndex: 1, raw: true);
+    $client->predict([null, []], fnIndex: 2, raw: true);
+    $response = $client->predict([null, null, "", 0.9, 256, 0.9, 1.2], fnIndex: 3);
+    $client->predict([], fnIndex: 6, raw: true);
 
     $outputs = $response->getOutputs();
 
@@ -41,12 +38,8 @@ it('can test another model', function () {
 });
 
 it('can test fnindexsudgugdhs', function () {
-    $client = new Client('https://ysharma-explore-llamav2-with-tgi.hf.space/--replicas/brc3o/');
-
-    $client->predict([], fnIndex: 6, raw: true);
-    $client->predict(['hi'], fnIndex: 2, raw: true);
-    $client->predict([null, null], fnIndex: 3, raw: true);
-    $response = $client->predict([null, null, '', 0.9, 256, 0.6, 1.2], fnIndex: 4);
+    $client = new Client('https://deepseek-ai-deepseek-vl-7b.hf.space');
+    $response = $client->predict([[["Hello!", null]], 0, 0, 0, 0, 0, 'DeepSeek-VL 7B'], apiName: '/predict');
 
     $value = $response->getOutput();
 

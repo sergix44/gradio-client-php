@@ -25,7 +25,7 @@ class Client extends RemoteClient
 
     private const QUEUE_JOIN = 'queue/join';
 
-    private const SSE_GET_DATA = 'queue/data';
+    private const SSE_QUEUE_DATA = 'queue/data';
 
     private const HTTP_CONFIG = 'config';
 
@@ -62,7 +62,7 @@ class Client extends RemoteClient
         return $this->config;
     }
 
-    public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null, bool $raw = false): Output|array|null
+    public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null, bool $raw = false, ?int $triggerId = null): Output|array|null
     {
         if ($apiName === null && $fnIndex === null) {
             throw new InvalidArgumentException('You must provide an apiName or fnIndex');
@@ -75,10 +75,10 @@ class Client extends RemoteClient
             throw new InvalidArgumentException('Endpoint not found');
         }
 
-        return $this->submit($endpoint, $arguments, $raw);
+        return $this->submit($endpoint, $arguments, $raw, $triggerId);
     }
 
-    protected function submit(Endpoint $endpoint, array $arguments, bool $raw): Output|array|null
+    protected function submit(Endpoint $endpoint, array $arguments, bool $raw, ?int $triggerId = null): Output|array|null
     {
         $payload = $this->preparePayload($arguments);
         $this->fireEvent(Event::SUBMIT, $payload);
@@ -88,12 +88,15 @@ class Client extends RemoteClient
                 'data' => $payload,
                 'fn_index' => $endpoint->index,
                 'session_hash' => $this->sessionHash,
+                'trigger_id' => $triggerId,
+                'event_data' => null,
             ], dto: $raw ? null : Output::class);
         }
 
         return match ($this->config->protocol) {
-            'sse_v1', 'sse_v2' => $this->sseV1V2Loop($endpoint, $payload),
-            default => $this->websocketLoop($endpoint, $payload),
+            'sse', 'sse_v1', 'sse_v2', 'sse_v2.1', 'sse_v3' => $this->sseLoop($endpoint, $payload, $this->config->protocol, $triggerId),
+            'ws' => $this->websocketLoop($endpoint, $payload),
+            default => throw new GradioException('Unknown protocol '.$this->config->protocol),
         };
     }
 
@@ -185,26 +188,34 @@ class Client extends RemoteClient
         return $message?->output;
     }
 
-    private function sseV1V2Loop(Endpoint $endpoint, array $payload): ?Output
+    private function sseLoop(Endpoint $endpoint, array $payload, string $protocol, ?int $triggerId): ?Output
     {
-        $response = $this->httpRaw('post', self::QUEUE_JOIN, [
-            'data' => $payload,
-            'fn_index' => $endpoint->index,
-            'session_hash' => $this->sessionHash,
-        ]);
+        if ($protocol === 'sse') {
+            $getEndpoint = self::QUEUE_JOIN;
+        } else {
+            $getEndpoint = self::SSE_QUEUE_DATA;
+            $response = $this->httpRaw('post', self::QUEUE_JOIN, [
+                'data' => $payload,
+                'fn_index' => $endpoint->index,
+                'session_hash' => $this->sessionHash,
+            ]);
 
-        if ($response->getStatusCode() === 503) {
-            throw new QueueFullException();
+
+            if ($response->getStatusCode() === 503) {
+                throw new QueueFullException();
+            }
+
+            if ($response->getStatusCode() !== 200) {
+                throw new GradioException('Error joining the queue');
+            }
         }
 
-        if ($response->getStatusCode() !== 200) {
-            throw new GradioException('Error joining the queue');
+        $params = ['session_hash' => $this->sessionHash];
+        if ($protocol === 'sse') {
+            $params['fn_index'] = $endpoint->index;
         }
 
-        //        $data = $this->decodeResponse($response);
-        //        $eventId = $data['event_id'];
-
-        $response = $this->httpRaw('get', self::SSE_GET_DATA, ['session_hash' => $this->sessionHash], [
+        $response = $this->httpRaw('get', $getEndpoint, $params, [
             'headers' => [
                 'Accept' => 'text/event-stream',
             ],
@@ -213,7 +224,7 @@ class Client extends RemoteClient
 
         $buffer = '';
         $message = null;
-        while (! $response->getBody()->eof()) {
+        while (!$response->getBody()->eof()) {
             $data = $response->getBody()->read(1);
             if ($data !== "\n") {
                 $buffer .= $data;
@@ -228,7 +239,27 @@ class Client extends RemoteClient
             $buffer = str_replace('data: ', '', $buffer);
             $message = $this->hydrator->hydrateWithJson(Message::class, $buffer);
 
+            if ($message instanceof SendData && $protocol === 'sse') {
+                $sendData = $this->httpRaw('post', self::SSE_QUEUE_DATA, [
+                    'data' => $payload,
+                    'fn_index' => $endpoint->index,
+                    'session_hash' => $this->sessionHash,
+                    'event_id' => $message->event_id,
+                    'event_data' => $message?->event_data,
+                    'trigger_id' => $triggerId,
+                ]);
+                if ($sendData->getStatusCode() !== 200) {
+                    throw new GradioException('Error sending data');
+                }
+                $buffer = '';
+                continue;
+            }
+
             if ($message instanceof ProcessCompleted) {
+                if (in_array($protocol, ['sse_v2', 'sse_v2.1'], true)) {
+                    $response->getBody()->close();
+                }
+
                 $this->fireEvent(Event::PROCESS_COMPLETED, [$message]);
                 if ($message->success) {
                     $this->fireEvent(Event::PROCESS_SUCCESS, [$message]);
