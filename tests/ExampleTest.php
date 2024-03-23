@@ -29,7 +29,7 @@ it('can test another model', function () {
     $client->predict([], fnIndex: 5, raw: true);
     $client->predict(['hi'], fnIndex: 1, raw: true);
     $client->predict([null, []], fnIndex: 2, raw: true);
-    $response = $client->predict([null, null, "", 0.9, 256, 0.9, 1.2], fnIndex: 3);
+    $response = $client->predict([null, null, '', 0.9, 256, 0.9, 1.2], fnIndex: 3);
     $client->predict([], fnIndex: 6, raw: true);
 
     $outputs = $response->getOutputs();
@@ -39,7 +39,7 @@ it('can test another model', function () {
 
 it('can test fnindexsudgugdhs', function () {
     $client = new Client('https://deepseek-ai-deepseek-vl-7b.hf.space');
-    $response = $client->predict([[["Hello!", null]], 0, 0, 0, 0, 0, 'DeepSeek-VL 7B'], apiName: '/predict');
+    $response = $client->predict([[['Hello!', null]], 0, 0, 0, 0, 0, 'DeepSeek-VL 7B'], apiName: '/predict');
 
     $value = $response->getOutput();
 

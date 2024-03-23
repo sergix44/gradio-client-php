@@ -200,7 +200,6 @@ class Client extends RemoteClient
                 'session_hash' => $this->sessionHash,
             ]);
 
-
             if ($response->getStatusCode() === 503) {
                 throw new QueueFullException();
             }
@@ -224,7 +223,7 @@ class Client extends RemoteClient
 
         $buffer = '';
         $message = null;
-        while (!$response->getBody()->eof()) {
+        while (! $response->getBody()->eof()) {
             $data = $response->getBody()->read(1);
             if ($data !== "\n") {
                 $buffer .= $data;
@@ -252,6 +251,7 @@ class Client extends RemoteClient
                     throw new GradioException('Error sending data');
                 }
                 $buffer = '';
+
                 continue;
             }
 
