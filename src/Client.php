@@ -37,9 +37,9 @@ class Client extends RemoteClient
 
     private ?string $hfToken;
 
-    public function __construct(string $src, ?string $hfToken = null, ?Config $config = null)
+    public function __construct(string $src, ?string $hfToken = null, ?Config $config = null, array $httpClientOptions = [])
     {
-        parent::__construct($src);
+        parent::__construct($src, $httpClientOptions);
         $this->config = $config ?? $this->http('get', self::HTTP_CONFIG, dto: Config::class);
         $this->loadEndpoints($this->config->dependencies);
         $this->sessionHash = substr(md5(microtime()), 0, 11);

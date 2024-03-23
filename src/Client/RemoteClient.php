@@ -17,7 +17,7 @@ abstract class RemoteClient extends RegisterEvents
 
     protected HydratorInterface $hydrator;
 
-    public function __construct(string $src)
+    public function __construct(string $src, array $httpClientOptions = [])
     {
         if (
             ! str_starts_with($src, 'http://') &&
@@ -32,13 +32,13 @@ abstract class RemoteClient extends RegisterEvents
 
         $this->hydrator = new Hydrator();
 
-        $this->httpClient = new Guzzle([
+        $this->httpClient = new Guzzle(array_merge([
             'base_uri' => str_replace('ws', 'http', $this->src),
             'headers' => [
                 'User-Agent' => 'gradio_client_php/1.0',
                 'Accept' => 'application/json',
             ],
-        ]);
+        ], $httpClientOptions));
     }
 
     protected function http(string $method, string $uri, array $params = [], array $opt = [], ?string $dto = null)
