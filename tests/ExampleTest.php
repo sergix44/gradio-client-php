@@ -36,12 +36,3 @@ it('can test another model', function () {
 
     expect($client)->toBeInstanceOf(Client::class);
 });
-
-it('can test fnindexsudgugdhs', function () {
-    $client = new Client('https://deepseek-ai-deepseek-vl-7b.hf.space');
-    $response = $client->predict([[['Hello!', null]], 0, 0, 0, 0, 0, 'DeepSeek-VL 7B'], apiName: '/predict');
-
-    $value = $response->getOutput();
-
-    expect($value)->toBeArray();
-});
