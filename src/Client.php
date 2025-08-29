@@ -136,7 +136,7 @@ class Client extends RemoteClient
      */
     private function websocketLoop(Endpoint $endpoint, array $payload): ?Output
     {
-        $ws = $this->ws(self::QUEUE_JOIN);
+        $ws = $this->ws(str_replace('/', '', $this->config->api_prefix).'/'.self::QUEUE_JOIN);
 
         while (true) {
             $data = $ws->receive();
@@ -191,10 +191,10 @@ class Client extends RemoteClient
     private function sseLoop(Endpoint $endpoint, array $payload, string $protocol, ?int $triggerId): ?Output
     {
         if ($protocol === 'sse') {
-            $getEndpoint = self::QUEUE_JOIN;
+            $getEndpoint = str_replace('/', '', $this->config->api_prefix).'/'.self::QUEUE_JOIN;
         } else {
-            $getEndpoint = self::SSE_QUEUE_DATA;
-            $response = $this->httpRaw('post', self::QUEUE_JOIN, [
+            $getEndpoint = str_replace('/', '', $this->config->api_prefix).'/'.self::SSE_QUEUE_DATA;
+            $response = $this->httpRaw('post', str_replace('/', '', $this->config->api_prefix).'/'.self::QUEUE_JOIN, [
                 'data' => $payload,
                 'fn_index' => $endpoint->index,
                 'session_hash' => $this->sessionHash,
@@ -239,7 +239,7 @@ class Client extends RemoteClient
             $message = $this->hydrator->hydrateWithJson(Message::class, $buffer);
 
             if ($message instanceof SendData && $protocol === 'sse') {
-                $sendData = $this->httpRaw('post', self::SSE_QUEUE_DATA, [
+                $sendData = $this->httpRaw('post', str_replace('/', '', $this->config->api_prefix).'/'.self::SSE_QUEUE_DATA, [
                     'data' => $payload,
                     'fn_index' => $endpoint->index,
                     'session_hash' => $this->sessionHash,

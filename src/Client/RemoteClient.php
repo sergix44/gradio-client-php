@@ -43,6 +43,7 @@ abstract class RemoteClient extends RegisterEvents
 
     protected function http(string $method, string $uri, array $params = [], array $opt = [], ?string $dto = null)
     {
+
         $response = $this->httpRaw($method, $uri, $params, $opt);
 
         return $this->decodeResponse($response, $dto);

@@ -16,7 +16,7 @@ use SergiX44\Hydrator\Annotation\ConcreteResolver;
 
 #[\Attribute] class MessageResolver extends ConcreteResolver
 {
-    public function concreteFor(array $data): ?string
+    public function concreteFor(array $data, array $all): ?string
     {
         $msg = $data['msg'] ?? throw new InvalidArgumentException('Missing msg key');
 
