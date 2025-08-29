@@ -1,11 +1,11 @@
 {
-    "name": "sergix44/gradio-client-php",
+    "name": "doublechen/gradio-client-php",
     "description": "Gradio client for PHP",
     "keywords": [
         "SergiX44",
         "gradio-client-php"
     ],
-    "homepage": "https://github.com/SergiX44/gradio-client-php",
+    "homepage": "https://github.com/doublechen/gradio-client-php",
     "license": "MIT",
     "authors": [
         {
