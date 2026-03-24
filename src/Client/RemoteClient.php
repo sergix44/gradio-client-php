@@ -17,7 +17,9 @@ abstract class RemoteClient extends RegisterEvents
 
     protected HydratorInterface $hydrator;
 
-    public function __construct(string $src, array $httpClientOptions = [])
+    private ?string $hfToken;
+
+    public function __construct(string $src, ?string $hfToken = null, array $httpClientOptions = [])
     {
         if (
             ! str_starts_with($src, 'http://') &&
@@ -25,19 +27,29 @@ abstract class RemoteClient extends RegisterEvents
             ! str_starts_with($src, 'ws://') &&
             ! str_starts_with($src, 'wss://')
         ) {
-            throw new InvalidArgumentException('The src must not contain the protocol');
+            throw new InvalidArgumentException('The src must start with a valid protocol (http, https, ws, or wss)');
         }
 
         $this->src = str_ends_with($src, '/') ? $src : "{$src}/";
+        $this->hfToken = $hfToken;
 
         $this->hydrator = new Hydrator();
 
+        $defaultHeaders = [
+            'User-Agent' => 'gradio_client_php/1.0',
+            'Accept' => 'application/json',
+        ];
+
+        if ($this->hfToken !== null) {
+            $defaultHeaders['Authorization'] = 'Bearer ' . $this->hfToken;
+        }
+
+        $mergedHeaders = array_merge($defaultHeaders, $httpClientOptions['headers'] ?? []);
+        unset($httpClientOptions['headers']);
+
         $this->httpClient = new Guzzle(array_merge([
-            'base_uri' => str_replace('ws', 'http', $this->src),
-            'headers' => [
-                'User-Agent' => 'gradio_client_php/1.0',
-                'Accept' => 'application/json',
-            ],
+            'base_uri' => preg_replace('/^ws(s?):/', 'http$1:', $this->src),
+            'headers' => $mergedHeaders,
         ], $httpClientOptions));
     }
 
@@ -59,7 +71,11 @@ abstract class RemoteClient extends RegisterEvents
 
     protected function ws(string $uri, array $options = []): EnhancedClient
     {
-        return new EnhancedClient(str_replace('http', 'ws', $this->src).$uri, $options);
+        if ($this->hfToken !== null && ! isset($options['headers']['Authorization'])) {
+            $options['headers']['Authorization'] = 'Bearer ' . $this->hfToken;
+        }
+
+        return new EnhancedClient(preg_replace('/^http(s?):/', 'ws$1:', $this->src).$uri, $options);
     }
 
     protected function decodeResponse(ResponseInterface|string $response, ?string $mapTo = null): mixed

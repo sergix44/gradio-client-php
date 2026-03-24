@@ -29,21 +29,20 @@ class Client extends RemoteClient
 
     private const HTTP_CONFIG = 'config';
 
+    private const HTTP_API_INFO = 'info';
+
     protected Config $config;
 
     private string $sessionHash;
 
     private array $endpoints = [];
 
-    private ?string $hfToken;
-
     public function __construct(string $src, ?string $hfToken = null, ?Config $config = null, array $httpClientOptions = [])
     {
-        parent::__construct($src, $httpClientOptions);
+        parent::__construct($src, $hfToken, $httpClientOptions);
         $this->config = $config ?? $this->http('get', self::HTTP_CONFIG, dto: Config::class);
         $this->loadEndpoints($this->config->dependencies);
         $this->sessionHash = substr(md5(microtime()), 0, 11);
-        $this->hfToken = $hfToken;
     }
 
     protected function loadEndpoints(array $dependencies): void
@@ -60,6 +59,11 @@ class Client extends RemoteClient
     public function getConfig(): Config
     {
         return $this->config;
+    }
+
+    public function viewApi(): array
+    {
+        return $this->http('get', self::HTTP_API_INFO);
     }
 
     public function predict(array $arguments, ?string $apiName = null, ?int $fnIndex = null, bool $raw = false, ?int $triggerId = null): Output|array|null
@@ -105,7 +109,13 @@ class Client extends RemoteClient
         return array_map(static function ($arg) {
             if (is_resource($arg)) {
                 $filename = stream_get_meta_data($arg)['uri'];
-                $contents = stream_get_contents($filename);
+                if (stream_get_meta_data($arg)['seekable']) {
+                    rewind($arg);
+                }
+                $contents = stream_get_contents($arg);
+                if ($contents === false) {
+                    throw new \RuntimeException("Failed to read stream: {$filename}");
+                }
                 $finfo = new \finfo(FILEINFO_MIME_TYPE);
                 $mime = $finfo->buffer($contents);
 
@@ -129,11 +139,6 @@ class Client extends RemoteClient
         }, $arguments);
     }
 
-    /**
-     * @throws GradioException
-     * @throws QueueFullException
-     * @throws \JsonException
-     */
     private function websocketLoop(Endpoint $endpoint, array $payload): ?Output
     {
         $ws = $this->ws(self::QUEUE_JOIN);
@@ -141,7 +146,6 @@ class Client extends RemoteClient
         while (true) {
             $data = $ws->receive();
 
-            // why sometimes $data is null?
             if ($data === null) {
                 continue;
             }
@@ -231,10 +235,7 @@ class Client extends RemoteClient
                 continue;
             }
 
-            // read second \n
             $response->getBody()->read(1);
-
-            // remove data:
             $buffer = str_replace('data: ', '', $buffer);
             $message = $this->hydrator->hydrateWithJson(Message::class, $buffer);
 
