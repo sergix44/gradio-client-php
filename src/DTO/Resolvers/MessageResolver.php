@@ -29,9 +29,7 @@ use SergiX44\Hydrator\Annotation\ConcreteResolver;
             MessageType::PROCESS_GENERATING->value => ProcessGenerating::class,
             MessageType::PROCESS_COMPLETED->value => ProcessCompleted::class,
             MessageType::LOG->value => Log::class,
-            default => (new class extends Message
-            {
-            })::class,
+            default => (new class extends Message {})::class,
         };
     }
 }

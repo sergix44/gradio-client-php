@@ -33,7 +33,7 @@ abstract class RemoteClient extends RegisterEvents
         $this->src = str_ends_with($src, '/') ? $src : "{$src}/";
         $this->hfToken = $hfToken;
 
-        $this->hydrator = new Hydrator();
+        $this->hydrator = new Hydrator;
 
         $defaultHeaders = [
             'User-Agent' => 'gradio_client_php/1.0',
@@ -41,7 +41,7 @@ abstract class RemoteClient extends RegisterEvents
         ];
 
         if ($this->hfToken !== null) {
-            $defaultHeaders['Authorization'] = 'Bearer ' . $this->hfToken;
+            $defaultHeaders['Authorization'] = 'Bearer '.$this->hfToken;
         }
 
         $mergedHeaders = array_merge($defaultHeaders, $httpClientOptions['headers'] ?? []);
@@ -72,7 +72,7 @@ abstract class RemoteClient extends RegisterEvents
     protected function ws(string $uri, array $options = []): EnhancedClient
     {
         if ($this->hfToken !== null && ! isset($options['headers']['Authorization'])) {
-            $options['headers']['Authorization'] = 'Bearer ' . $this->hfToken;
+            $options['headers']['Authorization'] = 'Bearer '.$this->hfToken;
         }
 
         return new EnhancedClient(preg_replace('/^http(s?):/', 'ws$1:', $this->src).$uri, $options);

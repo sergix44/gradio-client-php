@@ -160,7 +160,7 @@ class Client extends RemoteClient
             } elseif ($message instanceof QueueFull) {
                 $this->fireEvent(Event::QUEUE_FULL, [$message]);
                 $ws->close();
-                throw new QueueFullException();
+                throw new QueueFullException;
             } elseif ($message instanceof Estimation) {
                 $this->fireEvent(Event::QUEUE_ESTIMATION, [$message]);
             } elseif ($message instanceof SendData) {
@@ -205,7 +205,7 @@ class Client extends RemoteClient
             ]);
 
             if ($response->getStatusCode() === 503) {
-                throw new QueueFullException();
+                throw new QueueFullException;
             }
 
             if ($response->getStatusCode() !== 200) {

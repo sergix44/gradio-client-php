@@ -95,7 +95,7 @@ it('constructs client and fetches config', function () {
 });
 
 it('constructs client with pre-supplied config', function () {
-    $config = new Config();
+    $config = new Config;
     $config->version = '4.0.0';
     $config->dependencies = [];
     $config->protocol = 'sse_v3';
@@ -261,7 +261,7 @@ it('passes custom http client options', function () {
 });
 
 it('handles extra config properties via magic methods', function () {
-    $config = new Config();
+    $config = new Config;
     $config->custom_property = 'test_value';
 
     expect($config->custom_property)->toBe('test_value')
@@ -271,7 +271,7 @@ it('handles extra config properties via magic methods', function () {
 });
 
 it('returns outputs from output dto', function () {
-    $output = new Output();
+    $output = new Output;
     $output->data = ['first', 'second', 'third'];
 
     expect($output->getOutputs())->toBe(['first', 'second', 'third'])

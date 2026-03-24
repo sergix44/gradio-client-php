@@ -4,9 +4,7 @@ namespace SergiX44\Gradio\Event;
 
 class EventHandler
 {
-    public function __construct(private Event $event, private $callback)
-    {
-    }
+    public function __construct(private Event $event, private $callback) {}
 
     public function __invoke()
     {

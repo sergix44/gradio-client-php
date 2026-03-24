@@ -10,8 +10,7 @@ readonly class Endpoint
         private Config $config,
         public int $index,
         private readonly array $data
-    ) {
-    }
+    ) {}
 
     public function __get(string $name): mixed
     {
